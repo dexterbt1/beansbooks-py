@@ -1,0 +1,11 @@
+py/
+build/
+docs/_build
+dist/
+src/*.egg-info
+*.egg
+.Python
+*.sw[op]
+*.pyc
+distribute*tar*
+Session.vim
