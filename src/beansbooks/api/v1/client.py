@@ -35,15 +35,21 @@ class Client(object):
         content = req.content
         if self.auth:
             content.update(self.auth.request_dict)
+        full_url = req.url_path(prefix=self.endpoint)
+        req_body = json.dumps(content)
         pyreq = pyrequests.Request(
             req.METHOD, 
-            req.url_path(prefix=self.endpoint),
-            data=json.dumps(content),
+            full_url,
+            data=req_body,
             headers=req.headers,
             )
+        print "Request: %s %s: %s" % (req.METHOD, full_url, req_body)
         pyreq_prepped = pyreq.prepare()
         s = pyrequests.Session()
+
         response = s.send(pyreq_prepped)
+
+        print "Response: code=%s: body: %s" % (response.status_code, response.content)
 
         if response.status_code != pyrequests.codes.ok:
             raise Client.TransportError, "Status %s" % response.status_code 
@@ -54,5 +60,5 @@ class Client(object):
             if len(rd['config_error']) > 0: raise Client.ConfigError, rd['config_error']
             raise Client.RequestError, rd['error']
 
-        return req.handle_response_data(rd['data'])
+        return req.handle_response_data(self, rd['data'])
         

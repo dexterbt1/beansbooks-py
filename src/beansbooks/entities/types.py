@@ -20,17 +20,39 @@ class BuiltinTypeField(BeansBaseField): # abstract
         return type(self).builtin(v)
 
 
-class String(BuiltinTypeField):
+class StringField(BuiltinTypeField):
     builtin = unicode
 
-class Integer(BuiltinTypeField):
+class IntegerField(BuiltinTypeField):
     builtin = int
 
-class Decimal(BuiltinTypeField):
+class DecimalField(BuiltinTypeField):
     builtin = decimal.Decimal
 
 
+# -----------------------------------------
 
+
+
+class ReferenceField(BeansBaseField):
+    def __init__(self, to, via_key=None, **kwargs):
+        self.ref_to = to # TODO: check if real entity
+        self.via_key = via_key
+        return super(ReferenceField, self).__init__(**kwargs)
+        
+    def get_obj_id(self, v):
+        obj_id = None
+        if isinstance(v, dict):
+            obj_id = int(v.get('id'))
+        elif isinstance(v, int):
+            obj_id = v
+        elif isinstance(v, basestring):
+            obj_id = int(v)
+        return obj_id
+
+
+
+# -----------------------------------------
 
 class BeansEntityMeta(type):
     def __new__(cls, type_name, parents, dct):
@@ -42,6 +64,7 @@ class BeansEntityMeta(type):
             if getattr(t, '__metaclass__', None) == BeansFieldMeta:
                 if k not in dct['_beans_fields_by_name']:
                     field = dct[k]
+                    del dct[k]
                     field.name = k
                     dct['_beans_fields'].append(field)
                     dct['_beans_fields_by_name'][k] = field
@@ -53,6 +76,7 @@ class Entity(object):
 
     def __init__(self, obj_id=None, **kwargs):
         self._beans_obj_id = obj_id
+        self._beans_ref_getter = { }
 
         # setting the obj_id means sync from remote
         if not obj_id:
@@ -73,6 +97,11 @@ class Entity(object):
             if f.name in kwargs:
                 setattr(self, f.name, kwargs[f.name])
 
+    def __getattr__(self, name):
+        if name in self._beans_ref_getter:
+            g = self._beans_ref_getter.get(name)
+            return g()    
+
     @property
     def id(self):
         return self._beans_obj_id
@@ -81,14 +110,30 @@ class Entity(object):
     def build_from_dict(cls, data):
         obj_id = data['id']
         ck = { } # constructor kwargs
+
+        # init non-ref
         for f in cls._beans_fields:
-            if f.name in data:
-                ck[f.name] = f.build(data[f.name])
+            if isinstance(f, BuiltinTypeField):
+                if f.name in data:
+                    ck[f.name] = f.build(data[f.name])
 
-        return cls(obj_id, **ck)
-        
+        # instantiate first
+        obj = cls(obj_id, **ck)  
+        return obj
 
 
-
-
+    @classmethod
+    def attach_refs(cls, obj, data={}, api_client=None, LookupClass=None):
+        if not LookupClass:
+            return
+        if not api_client:
+            return
+        for f in cls._beans_fields:
+            if isinstance(f, ReferenceField):
+                if f.via_key in data:
+                    v = data[f.via_key]
+                    to_obj_id = f.get_obj_id(v)
+                    ref_to = f.ref_to
+                    ref_fn = lambda: api_client.execute(LookupClass(ref_to, to_obj_id))
+                    obj._beans_ref_getter[f.name] = ref_fn
 
