@@ -102,6 +102,9 @@ class Entity(object):
             g = self._beans_ref_getter.get(name)
             return g()    
 
+    def _set_id(self, new_id):
+        self._beans_obj_id = new_id
+
     @property
     def id(self):
         return self._beans_obj_id
@@ -138,4 +141,19 @@ class Entity(object):
                         ref_to = cls
                     ref_fn = lambda: api_client.execute(LookupClass(ref_to, to_obj_id))
                     obj._beans_ref_getter[f.name] = ref_fn
+
+
+    @classmethod
+    def fields_as_dict(cls, obj):
+        data = { }
+        for fk in cls._beans_fields_by_name.keys():
+            f = cls._beans_fields_by_name[fk]
+            if f.required:
+                data[fk] = getattr(obj, fk, None)
+            else:
+                v = getattr(obj, fk, None) 
+                if v is not None: 
+                    data[fk] 
+        return data
+
 

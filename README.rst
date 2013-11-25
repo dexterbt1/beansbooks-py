@@ -21,12 +21,12 @@ To illustrate usage, see the sample client code below::
 
     from beansbooks.api.v1 import Client, AuthAccess
     from beansbooks.api.v1 import request
-    from beansbooks.entities import Customer
+    from beansbooks.entities.customer import Customer
 
     auth = AuthAccess(uid='xx...', expiration='yy...', key='zz...')
     client = Client('http://my.beansbooks.host/api', auth=auth)
 
-    # fetch one object
+    # lookup - returns one object
     customer = client.execute(request.Lookup(Customer, 1))
 
     print customer.id
@@ -36,7 +36,12 @@ To illustrate usage, see the sample client code below::
     # automatically fetch the related objects
     billing_address = customer.default_billing_address
     print billing_address.standard
-    
+
+    # create
+    johndoe = Customer(first_name='John', last_name='Doe')
+    client.execute(request.Create(johndoe))
+    print johndoe.id
+
 
     
 References

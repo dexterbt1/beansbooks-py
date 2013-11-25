@@ -1,7 +1,7 @@
 from beansbooks.entities import types
 from beansbooks.entities.account import Account
 
-class CustomerAddress(types.Entity):
+class Address(types.Entity):
     """
     https://beansbooks.com/api/explore/object/Customer/Address
     """
@@ -32,8 +32,8 @@ class Customer(types.Entity):
     email                       = types.StringField()
     phone_number                = types.StringField()
     fax_number                  = types.StringField()
-    default_billing_address     = types.ReferenceField(CustomerAddress, via_key='default_billing_address_id')
-    default_shipping_address    = types.ReferenceField(CustomerAddress, via_key='default_shipping_address_id')
+    default_billing_address     = types.ReferenceField(Address, via_key='default_billing_address_id')
+    default_shipping_address    = types.ReferenceField(Address, via_key='default_shipping_address_id')
     default_account             = types.ReferenceField(Account, via_key='default_account')
     sales_count                 = types.IntegerField(read_only=True)
     sales_total                 = types.DecimalField(read_only=True)
@@ -47,7 +47,7 @@ class Customer(types.Entity):
 
 
 
-class CustomerSale(types.Entity):
+class Sale(types.Entity):
     """
     https://beansbooks.com/api/explore/object/Customer/Sale
     """
@@ -70,8 +70,8 @@ class CustomerSale(types.Entity):
     order_number                = types.StringField()
     po_number                   = types.StringField()
     quote_number                = types.StringField()
-    billing_address             = types.ReferenceField(CustomerAddress, via_key='billing_address')
-    shipping_address            = types.ReferenceField(CustomerAddress, via_key='shipping_address')
+    billing_address             = types.ReferenceField(Address, via_key='billing_address')
+    shipping_address            = types.ReferenceField(Address, via_key='shipping_address')
     #lines                       = ARRAYAn array of Beans_Customer_Sale_Line.
     #taxes                       = ARRAYAn array of Beans_Customer_Sale_Tax - these are the applied taxes and their totals.
     #payments                    = ARRAYAn array of the Beans_Customer_Payment that this sale is tied to.

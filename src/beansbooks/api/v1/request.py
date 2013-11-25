@@ -17,7 +17,7 @@ class Lookup(object):
         return d
 
     def url_path(self, prefix=''):
-        path = self.__class__.URL_PATH
+        path = type(self).URL_PATH
         url_path_data = { 'entity_url_path': self.entity.Meta.entity_url_path }
         path = path % url_path_data
         url = prefix + path
@@ -57,7 +57,7 @@ class Search(object):
             self.next_page_search = next_page_search
 
         def has_next_page(self):
-            return (self.next_page_search is not None)
+            return self.page < self.pages-1
 
         def next_page(self):
             return self.client.execute(self.next_page_search)
@@ -84,7 +84,7 @@ class Search(object):
         return d
 
     def url_path(self, prefix=''):
-        path = self.__class__.URL_PATH
+        path = type(self).URL_PATH
         url_path_data = { 'entity_url_path': self.entity.Meta.entity_url_path }
         path = path % url_path_data
         url = prefix + path
@@ -117,4 +117,41 @@ class Search(object):
                 next_page_search=type(self)(self.entity, sort_by=self.sort_by, page=next_page, page_size=self.page_size, **params),
                 )
         return page
+
+
+
+class Create(object):
+    METHOD = 'POST'
+    URL_PATH = '%(entity_url_path)s/Create'
+
+    def __init__(self, obj):
+        self.obj_to_create = obj 
+        self.entity = type(obj)
+
+    @property
+    def headers(self):
+        return { 'Content-Type': 'application/json' }
+
+    @property
+    def content(self):
+        obj = self.obj_to_create
+        ed = type(obj).fields_as_dict(obj)
+        return ed
+
+    def url_path(self, prefix=''):
+        path = type(self).URL_PATH
+        url_path_data = { 'entity_url_path': self.entity.Meta.entity_url_path }
+        path = path % url_path_data
+        url = prefix + path
+        return url
+
+    def handle_response_data(self, client, data):
+        success = False
+        if self.entity.Meta.entity_lookup_data_key in data:
+            ed = data.get(self.entity.Meta.entity_lookup_data_key)
+            success = 'id' in ed
+            obj_id = ed.get('id', None)
+            self.obj_to_create._set_id(obj_id)
+            
+        return success
 

@@ -1,6 +1,6 @@
 import unittest
 
-from beansbooks.entities import Customer
+from beansbooks.entities.customer import Customer
 from beansbooks.api.v1 import request
 
 
