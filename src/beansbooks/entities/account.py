@@ -11,4 +11,5 @@ class Account(types.Entity):
     class Meta:
         entity_url_path = "/Account"
         entity_lookup_data_key = "account"
+        entity_search_data_key = "accounts"
 

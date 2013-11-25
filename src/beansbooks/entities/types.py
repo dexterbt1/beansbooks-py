@@ -35,8 +35,8 @@ class DecimalField(BuiltinTypeField):
 
 
 class ReferenceField(BeansBaseField):
-    def __init__(self, to, via_key=None, **kwargs):
-        self.ref_to = to # TODO: check if real entity
+    def __init__(self, to=None, via_key=None, **kwargs):
+        self.ref_to = to 
         self.via_key = via_key
         return super(ReferenceField, self).__init__(**kwargs)
         
@@ -134,6 +134,8 @@ class Entity(object):
                     v = data[f.via_key]
                     to_obj_id = f.get_obj_id(v)
                     ref_to = f.ref_to
+                    if f.ref_to == "self":
+                        ref_to = cls
                     ref_fn = lambda: api_client.execute(LookupClass(ref_to, to_obj_id))
                     obj._beans_ref_getter[f.name] = ref_fn
 
