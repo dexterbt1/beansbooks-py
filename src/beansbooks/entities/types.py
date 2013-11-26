@@ -16,8 +16,11 @@ class BeansBaseField(object):
 class BuiltinTypeField(BeansBaseField): # abstract
     builtin = None 
     
-    def build(self, v):
+    def from_json(self, v):
         return type(self).builtin(v)
+
+    def to_json(self, v):
+        return v
 
 
 class StringField(BuiltinTypeField):
@@ -43,7 +46,9 @@ class ReferenceField(BeansBaseField):
     def get_obj_id(self, v):
         obj_id = None
         if isinstance(v, dict):
-            obj_id = int(v.get('id'))
+            obj_id_str = v.get('id')
+            if obj_id_str is not None:
+                obj_id = int(obj_id_str)
         elif isinstance(v, int):
             obj_id = v
         elif isinstance(v, basestring):
@@ -118,7 +123,7 @@ class Entity(object):
         for f in cls._beans_fields:
             if isinstance(f, BuiltinTypeField):
                 if f.name in data:
-                    ck[f.name] = f.build(data[f.name])
+                    ck[f.name] = f.from_json(data[f.name])
 
         # instantiate first
         obj = cls(obj_id, **ck)  
