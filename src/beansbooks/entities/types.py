@@ -48,13 +48,17 @@ class ReferenceField(BeansBaseField):
     def get_obj_id(self, v):
         obj_id = None
         if isinstance(v, dict):
+<<<<<<< HEAD
             obj_id_str = v.get('id')
             if obj_id_str is not None:
                 obj_id = int(obj_id_str)
+=======
+            obj_id = str(v.get('id'))
+>>>>>>> added support for ArrayField
         elif isinstance(v, int):
-            obj_id = v
+            obj_id = str(v)
         elif isinstance(v, basestring):
-            obj_id = int(v)
+            obj_id = v
         return obj_id
 
     def from_remote(self, parent, v, api_client=None, LookupClass=None):
@@ -89,7 +93,6 @@ class ArrayField(BuiltinTypeField):
 
     def to_remote(self, v):
         return v
-        
 
 
 
