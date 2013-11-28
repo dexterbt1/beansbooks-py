@@ -48,13 +48,9 @@ class ReferenceField(BeansBaseField):
     def get_obj_id(self, v):
         obj_id = None
         if isinstance(v, dict):
-<<<<<<< HEAD
             obj_id_str = v.get('id')
             if obj_id_str is not None:
-                obj_id = int(obj_id_str)
-=======
-            obj_id = str(v.get('id'))
->>>>>>> added support for ArrayField
+                obj_id = str(obj_id_str)
         elif isinstance(v, int):
             obj_id = str(v)
         elif isinstance(v, basestring):
