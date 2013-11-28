@@ -1,5 +1,7 @@
 import decimal
 
+# TODO: FIXME: Needs a lots of test cases
+
 class BeansFieldMeta(type):
     pass
 
@@ -16,10 +18,10 @@ class BeansBaseField(object):
 class BuiltinTypeField(BeansBaseField): # abstract
     builtin = None 
     
-    def from_json(self, v):
+    def from_remote(self, parent, v, api_client=None, LookupClass=None):
         return type(self).builtin(v)
 
-    def to_json(self, v):
+    def to_remote(self, v):
         return v
 
 
@@ -42,7 +44,7 @@ class ReferenceField(BeansBaseField):
         self.ref_to = to 
         self.via_key = via_key
         return super(ReferenceField, self).__init__(**kwargs)
-        
+
     def get_obj_id(self, v):
         obj_id = None
         if isinstance(v, dict):
@@ -54,6 +56,40 @@ class ReferenceField(BeansBaseField):
         elif isinstance(v, basestring):
             obj_id = int(v)
         return obj_id
+
+    def from_remote(self, parent, v, api_client=None, LookupClass=None):
+        if not v:
+            return None
+        ref_fn = None
+        to_obj_id = self.get_obj_id(v)
+        ref_to = self.ref_to
+        if self.ref_to == "self":
+            ref_to = parent
+        ref_fn = lambda: api_client.execute(LookupClass(ref_to, to_obj_id))
+        return ref_fn
+
+    def to_remote(self, v):
+        return v
+        
+
+
+class ArrayField(BuiltinTypeField):
+    def __init__(self, entity, **kwargs):
+        self.entity = entity
+        return super(ArrayField, self).__init__(**kwargs)
+    
+    def from_remote(self, parent, v, api_client=None, LookupClass=None):
+        if not v:
+            return
+        nv = [ ]
+        for ed in v:
+            e = self.entity.build_from_dict(ed, api_client=api_client, LookupClass=LookupClass)
+            nv.append(e)
+        return nv
+
+    def to_remote(self, v):
+        return v
+        
 
 
 
@@ -115,38 +151,31 @@ class Entity(object):
         return self._beans_obj_id
 
     @classmethod
-    def build_from_dict(cls, data):
+    def build_from_dict(cls, data, api_client=None, LookupClass=None):
         obj_id = data['id']
         ck = { } # constructor kwargs
 
-        # init non-ref
+        ref_getters = { }
         for f in cls._beans_fields:
-            if isinstance(f, BuiltinTypeField):
-                if f.name in data:
-                    ck[f.name] = f.from_json(data[f.name])
+            dvk = f.name
+            if hasattr(f, 'via_key'): # TODO: this is tied to the ReferenceField
+                dvk = f.via_key
+            if dvk in data:
+                fv = f.from_remote(cls, data[dvk], api_client=api_client, LookupClass=LookupClass)
+                if hasattr(fv, '__call__'): 
+                    ref_getters[f.name] = fv
+                else:
+                    # non-ref
+                    ck[f.name] = fv
 
         # instantiate first
         obj = cls(obj_id, **ck)  
+
+        # attach refs
+        for k in ref_getters.keys():
+            obj._beans_ref_getter[k] = ref_getters.get(k)
+
         return obj
-
-
-    @classmethod
-    def attach_refs(cls, obj, data={}, api_client=None, LookupClass=None):
-        if not LookupClass:
-            return
-        if not api_client:
-            return
-        for f in cls._beans_fields:
-            if isinstance(f, ReferenceField):
-                if f.via_key in data:
-                    v = data[f.via_key]
-                    to_obj_id = f.get_obj_id(v)
-                    ref_to = f.ref_to
-                    if f.ref_to == "self":
-                        ref_to = cls
-                    ref_fn = lambda: api_client.execute(LookupClass(ref_to, to_obj_id))
-                    obj._beans_ref_getter[f.name] = ref_fn
-
 
     @classmethod
     def fields_as_dict(cls, obj):

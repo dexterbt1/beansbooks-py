@@ -27,11 +27,12 @@ class Client(object):
     class ConfigError(Exception): pass
     class RequestError(Exception): pass
 
-    def __init__(self, endpoint, auth=None):
+    def __init__(self, endpoint, auth=None, debug=False):
         self.endpoint = endpoint
         self.auth = auth
+        self.debug = debug
 
-    def execute(self, req):
+    def execute(self, req, **kwargs):
         content = req.content
         if self.auth:
             content.update(self.auth.request_dict)
@@ -43,13 +44,15 @@ class Client(object):
             data=req_body,
             headers=req.headers,
             )
-        print "Request: %s %s: %s" % (req.METHOD, full_url, req_body)
+        if self.debug or kwargs.get('debug', False):
+            print "Request: %s %s: %s" % (req.METHOD, full_url, req_body)
         pyreq_prepped = pyreq.prepare()
         s = pyrequests.Session()
 
         response = s.send(pyreq_prepped)
 
-        print "Response: code=%s: body: %s" % (response.status_code, response.content)
+        if self.debug or kwargs.get('debug', False):
+            print "Response: code=%s: body: %s" % (response.status_code, response.content)
 
         if response.status_code != pyrequests.codes.ok:
             raise Client.TransportError, "Status %s" % response.status_code 

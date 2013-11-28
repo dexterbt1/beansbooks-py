@@ -47,6 +47,24 @@ class Customer(types.Entity):
 
 
 
+class SaleLine(types.Entity):
+    """
+    https://beansbooks.com/api/explore/object/Customer/Sale/Line
+    """
+    account                     = types.ReferenceField(Account, via_key='account')
+    description                 = types.StringField()
+    amount                      = types.DecimalField()
+    quantity                    = types.IntegerField()
+    total                       = types.DecimalField(read_only=True)
+    #line_taxesARRAYAn array of Beans_Customer_Sale_Line_Tax for this line.
+    
+    class Meta:
+        entity_url_path = "/Customer/Sale/Line"
+        entity_lookup_data_key = "line"
+        entity_search_data_key = "lines"
+    
+
+
 class Sale(types.Entity):
     """
     https://beansbooks.com/api/explore/object/Customer/Sale
@@ -72,7 +90,7 @@ class Sale(types.Entity):
     quote_number                = types.StringField()
     billing_address             = types.ReferenceField(Address, via_key='billing_address')
     shipping_address            = types.ReferenceField(Address, via_key='shipping_address')
-    #lines                       = ARRAYAn array of Beans_Customer_Sale_Line.
+    lines                       = types.ArrayField(SaleLine)
     #taxes                       = ARRAYAn array of Beans_Customer_Sale_Tax - these are the applied taxes and their totals.
     #payments                    = ARRAYAn array of the Beans_Customer_Payment that this sale is tied to.
     status                      = types.StringField()

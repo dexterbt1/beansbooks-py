@@ -30,9 +30,7 @@ class Lookup(object):
             ed = data.get(self.entity.Meta.entity_lookup_data_key)
             obj_id = ed['id']
             if int(obj_id) == int(self.obj_id):
-                obj = self.entity.build_from_dict(ed) 
-                self.entity.attach_refs(obj, data=ed, api_client=client, LookupClass=type(self))
-                
+                obj = self.entity.build_from_dict(ed, api_client=client, LookupClass=type(self)) 
         return obj
 
 
