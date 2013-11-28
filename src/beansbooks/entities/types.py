@@ -24,6 +24,8 @@ class BuiltinTypeField(BeansBaseField): # abstract
     def to_remote(self, v):
         return v
 
+class BooleanField(BuiltinTypeField):
+    builtin = bool
 
 class StringField(BuiltinTypeField):
     builtin = unicode
