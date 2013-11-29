@@ -50,6 +50,7 @@ class ReferenceField(BeansBaseField):
     def get_obj_id(self, v):
         obj_id = None
         if isinstance(v, dict):
+            # TODO: requires cleanup, this piece of logic should belong to EmbeddedObjectField
             obj_id_str = v.get('id')
             if obj_id_str is not None:
                 obj_id = str(obj_id_str)
@@ -72,7 +73,24 @@ class ReferenceField(BeansBaseField):
 
     def to_remote(self, v):
         return v
-        
+
+
+
+class EmbeddedObjectField(BeansBaseField):
+    def __init__(self, entity, via_key=None, **kwargs):
+        self.entity = entity
+        self.via_key = via_key
+        return super(EmbeddedObjectField, self).__init__(**kwargs)
+
+    def from_remote(self, parent, v, api_client=None, LookupClass=None):
+        if not v:
+            return None
+        obj = self.entity.build_from_dict(v, api_client=api_client, LookupClass=LookupClass) 
+        return obj
+
+    def to_remote(self, v):
+        return v
+
 
 
 class ArrayField(BuiltinTypeField):
@@ -163,7 +181,7 @@ class Entity(object):
                 dvk = f.via_key
             if dvk in data:
                 fv = f.from_remote(cls, data[dvk], api_client=api_client, LookupClass=LookupClass)
-                if hasattr(fv, '__call__'): 
+                if hasattr(fv, '__call__') and not(getattr(fv, '__metaclass__', None) == BeansEntityMeta): 
                     ref_getters[f.name] = fv
                 else:
                     # non-ref

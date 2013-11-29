@@ -34,7 +34,7 @@ class Customer(types.Entity):
     fax_number                  = types.StringField()
     default_billing_address     = types.ReferenceField(Address, via_key='default_billing_address_id')
     default_shipping_address    = types.ReferenceField(Address, via_key='default_shipping_address_id')
-    default_account             = types.ReferenceField(Account, via_key='default_account')
+    default_account             = types.EmbeddedObjectField(Account, via_key='default_account')
     sales_count                 = types.IntegerField(read_only=True)
     sales_total                 = types.DecimalField(read_only=True)
     balance_pending             = types.DecimalField(read_only=True)

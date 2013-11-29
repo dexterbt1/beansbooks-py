@@ -36,3 +36,4 @@ class BuiltinTypesTest1(unittest.TestCase):
         self.assertTrue(isinstance(inp, decimal.Decimal))
 
 
+
