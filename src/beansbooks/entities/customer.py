@@ -51,7 +51,7 @@ class SaleLine(types.Entity):
     """
     https://beansbooks.com/api/explore/object/Customer/Sale/Line
     """
-    account                     = types.ReferenceField(Account, via_key='account')
+    account                     = types.EmbeddedObjectField(Account, via_key='account')
     description                 = types.StringField()
     amount                      = types.DecimalField()
     quantity                    = types.IntegerField()
@@ -69,8 +69,8 @@ class Sale(types.Entity):
     """
     https://beansbooks.com/api/explore/object/Customer/Sale
     """
-    customer                    = types.ReferenceField(Customer, via_key='customer', required=True)
-    account                     = types.ReferenceField(Account, via_key='account')
+    customer                    = types.EmbeddedObjectField(Customer, via_key='customer', required=True)
+    account                     = types.EmbeddedObjectField(Account, via_key='account')
     sent                        = types.StringField() 
     refund_sale                 = types.ReferenceField('self', via_key='refund_sale_id')
     date_created                = types.StringField(required=True)
@@ -88,8 +88,8 @@ class Sale(types.Entity):
     order_number                = types.StringField()
     po_number                   = types.StringField()
     quote_number                = types.StringField()
-    billing_address             = types.ReferenceField(Address, via_key='billing_address')
-    shipping_address            = types.ReferenceField(Address, via_key='shipping_address')
+    billing_address             = types.EmbeddedObjectField(Address, via_key='billing_address')
+    shipping_address            = types.EmbeddedObjectField(Address, via_key='shipping_address')
     lines                       = types.ArrayField(SaleLine)
     #taxes                       = ARRAYAn array of Beans_Customer_Sale_Tax - these are the applied taxes and their totals.
     #payments                    = ARRAYAn array of the Beans_Customer_Payment that this sale is tied to.
